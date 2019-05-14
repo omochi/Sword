@@ -9,6 +9,7 @@
 import Foundation
 import NIOWebSocket
 import NIOWebSocketClient
+import NIOSSL
 
 /// Represents a WebSocket session for Discord
 protocol GatewayHandler : AnyObject {
@@ -41,6 +42,8 @@ protocol GatewayHandler : AnyObject {
   
   /// Reconnects the handler to the gateway
   func reconnect()
+  
+  func didConnect()
 }
 
 extension GatewayHandler {
@@ -53,7 +56,31 @@ extension GatewayHandler {
       return
     }
     
-    let config = WebSocketClient.Configuration(maxFrameSize: 1 << 31)
+    print("connect: \(urlString)")
+    
+    var config = WebSocketClient.Configuration(maxFrameSize: 1 << 31)
+    
+    func _isSSL() -> Bool {
+      return url.scheme == "wss"
+    }
+    
+    let isSSL = _isSSL()
+    
+    func _port() -> Int {
+      if let port = url.port {
+        return port
+      }
+      if isSSL {
+        return 443
+      } else {
+        return 80
+      }
+    }
+    
+    let port = _port()
+    
+    config.tlsConfiguration = TLSConfiguration.forClient()
+    
     let client = WebSocketClient(
       eventLoopGroupProvider: .shared(sword.worker),
       configuration: config
@@ -61,8 +88,10 @@ extension GatewayHandler {
     
     let ws = client.connect(
       host: host,
-      port: url.port ?? 443
+      port: port,
+      uri: url.absoluteString
     ) { [unowned self] ws in
+        print("onUpgrade")
       self.session = ws
       
       ws.onBinary { _, data in
@@ -76,16 +105,10 @@ extension GatewayHandler {
       ws.onText { _, text in
         self.handleText(text)
       }
+      
+      self.didConnect()
     }
-    
-    // Makes sure we aren't in an event loop when we try to reconnect in the future
-    DispatchQueue.main.async {
-      do {
-        try ws.wait()
-      } catch {
-        Sword.log(.error, .gatewayConnectFailure(error.localizedDescription))
-      }
-    }
+    _ = ws
   }
   
   /// Disconnects the handler from the gateway

@@ -7,6 +7,20 @@
 //
 
 import Foundation
+extension Data {
+  func toUTF8Robust2() -> String {
+    var data = self
+    data.append(0)
+    let (str, _) = data.withUnsafeBytes {
+      (bufPtr: UnsafeRawBufferPointer) -> (result: String, repairsMade: Bool) in
+      let ptr = bufPtr.baseAddress!.assumingMemoryBound(to: UInt8.self)
+      return String.decodeCString(ptr,
+                                  as: Unicode.UTF8.self,
+                                  repairingInvalidCodeUnits: true)!
+    }
+    return str
+  }
+}
 
 extension Shard {
   /// Operates on a given received payload
@@ -17,6 +31,7 @@ extension Shard {
     _ payload: PayloadSinData,
     _ data: Data
   ) {
+    print("PAYLOAD \(payload.op)")
     switch payload.op {
     // Dispatch (OP = 0)
     case .dispatch:
@@ -45,6 +60,7 @@ extension Shard {
       
     // HELLO (OP = 10)
     case .hello:
+      print("HELLO!")
       guard let hello = decode(GatewayHello.self, from: data) else {
         Sword.log(.error, "Unable to handle HELLO, shutting shard down...")
         disconnect()

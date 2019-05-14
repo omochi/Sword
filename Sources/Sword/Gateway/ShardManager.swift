@@ -46,10 +46,10 @@ extension Shard {
     func spawn(_ id: UInt8, to host: String) {
       // Append version
       var host = "\(host)/?v=\(Sword.gatewayVersion)"
-      
+
       // Append encoding
       host += "&encoding=\(Sword.gatewayEncoding)"
-      
+        
       if sword.options.transportCompression {
         // Append compression
         host += "&compress=\(Sword.gatewayCompression)"
