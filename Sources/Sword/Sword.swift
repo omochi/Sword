@@ -64,7 +64,9 @@ open class Sword {
       Logger.isEnabled = true
     }
     
-    Sword.decoder.userInfo[Sword.decodingInfo] = self
+    let decoder = Sword.decoder
+    decoder.userInfo[Sword.decodingInfo] = self
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
   }
   
   deinit {
@@ -111,7 +113,7 @@ open class Sword {
       switch result {
       case .failure(let error):
         then(sword, .failure(error))
-      case.success(let data):
+      case .success(let data):
         do {
           let info = try Sword.decoder.decode(GatewayInfo.self, from: data)
           then(sword, .success(info))
