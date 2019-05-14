@@ -11,6 +11,86 @@ import NIOWebSocket
 import NIOWebSocketClient
 import zlib
 
+// temporary debug
+func inflate(data: Data) -> Data {
+    var stream = z_stream()
+    stream.avail_in = 0
+    stream.next_in = nil
+    stream.total_out = 0
+    stream.zalloc = nil
+    stream.zfree = nil
+    
+    inflateInit2_(
+        &stream,
+        MAX_WBITS,
+        ZLIB_VERSION,
+        Int32(MemoryLayout<z_stream>.size)
+    )
+    
+    defer {
+        inflateEnd(&stream)
+    }
+    
+    let deflated = UnsafeMutableBufferPointer<UInt8>.allocate(
+        capacity: data.count
+    )
+    
+    _ = deflated.initialize(from: data)
+    
+    defer {
+        deflated.deallocate()
+    }
+    
+    stream.next_in = deflated.baseAddress
+    stream.avail_in = UInt32(deflated.count)
+    
+    var inflated = UnsafeMutableBufferPointer<UInt8>.allocate(
+        capacity: deflated.count * 2
+    )
+    
+    defer {
+        inflated.deallocate()
+    }
+    
+    stream.total_out = 0
+    
+    var status: Int32 = 0
+    
+    while true {
+        stream.next_out = inflated.baseAddress?.advanced(by: Int(stream.total_out))
+        stream.avail_out = UInt32(inflated.count) - UInt32(stream.total_out)
+        
+        status = inflate(&stream, Z_SYNC_FLUSH)
+        
+        if status == Z_BUF_ERROR && stream.avail_in > 0 {
+            inflated.realloc(
+                size: inflated.count + min(inflated.count * 2, maxBufSize)
+            )
+            continue
+        } else if status != Z_OK {
+            break
+        }
+    }
+    
+    return Data(bytes: inflated.baseAddress!,
+                count: Int(stream.total_out))
+}
+
+extension Data {
+    func toUTF8Robust() -> String {
+        var data = self
+        data.append(0)
+        let (str, _) = data.withUnsafeBytes {
+            (bufPtr: UnsafeRawBufferPointer) -> (result: String, repairsMade: Bool) in
+            let ptr = bufPtr.baseAddress!.assumingMemoryBound(to: UInt8.self)
+            return String.decodeCString(ptr,
+                                        as: Unicode.UTF8.self,
+                                        repairingInvalidCodeUnits: true)!
+        }
+        return str
+    }
+}
+
 /// Shard - Represents a unique session to a portion of the guilds a bot is
 ///         connected to.
 class Shard: GatewayHandler {
@@ -102,11 +182,23 @@ class Shard: GatewayHandler {
   ///
   /// - parameter data: Data that was sent through the gateway
   func handleBinary(_ data: Data) {
+    print("handleBinary \(data.count)")
     buffer.append(contentsOf: data)
+
+    // debug
+//    do {
+//        let deflated = data
+//        let inflated = inflate(data: deflated)
+//        let str = inflated.toUTF8Robust()
+//        print(str)
+//    }
     
     guard isBufferComplete else {
+      print("incomplete: \(buffer.count)")
       return
     }
+    
+    print("deflate...")
     
     let deflated = UnsafeMutableBufferPointer<UInt8>.allocate(
       capacity: buffer.count
@@ -207,6 +299,7 @@ class Shard: GatewayHandler {
   /// - parameter text: String that was sent through the gateway
   func handleText(_ text: String) {
     guard session != nil else {
+        print("no session")
       return
     }
     
@@ -282,7 +375,7 @@ class Shard: GatewayHandler {
       token: sword.token,
       willCompress: sword.options.payloadCompression
     )
-    
+    print("identify compress=\(identify.willCompress)")
     let payload = Payload(d: identify, op: .identify, s: nil, t: nil)
     send(payload)
   }

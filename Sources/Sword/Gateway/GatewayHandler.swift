@@ -9,6 +9,7 @@
 import Foundation
 import NIOWebSocket
 import NIOWebSocketClient
+import NIOSSL
 
 /// Represents a WebSocket session for Discord
 protocol GatewayHandler : AnyObject {
@@ -53,7 +54,12 @@ extension GatewayHandler {
       return
     }
     
-    let config = WebSocketClient.Configuration(maxFrameSize: 1 << 31)
+    var config = WebSocketClient.Configuration(maxFrameSize: 1 << 31)
+    
+    if url.scheme == "wss" {
+        config.tlsConfiguration = TLSConfiguration.forClient()
+    }
+    
     let client = WebSocketClient(
       eventLoopGroupProvider: .shared(sword.worker),
       configuration: config

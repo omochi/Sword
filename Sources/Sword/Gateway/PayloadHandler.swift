@@ -17,6 +17,7 @@ extension Shard {
     _ payload: PayloadSinData,
     _ data: Data
   ) {
+    print("PAYLOAD \(payload.op)")
     switch payload.op {
     // Dispatch (OP = 0)
     case .dispatch:
@@ -45,6 +46,7 @@ extension Shard {
       
     // HELLO (OP = 10)
     case .hello:
+      print("HELLO!")
       guard let hello = decode(GatewayHello.self, from: data) else {
         Sword.log(.error, "Unable to handle HELLO, shutting shard down...")
         disconnect()

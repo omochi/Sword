@@ -66,7 +66,6 @@ open class Sword {
     
     let decoder = Sword.decoder
     decoder.userInfo[Sword.decodingInfo] = self
-    decoder.keyDecodingStrategy = .convertFromSnakeCase
   }
   
   deinit {
