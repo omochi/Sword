@@ -40,9 +40,16 @@ extension Sword {
     client.execute(request: request).whenComplete { [unowned self] result in
       switch result {
       case .failure(let error):
-        self.handleRequestError(error)
+        then(self, .failure(Sword.Error(error.localizedDescription)))
       case .success(let response):
-        self.handleRequestResponse(response)
+        guard let body = response.body else {
+            then(self, .success(Data()))
+            return
+        }
+        
+        let dpData = body.getDispatchData(at: 0, length: body.readableBytes)!
+        let data = dpData as AnyObject as! Data
+        then(self, .success(data))
       }
     }
   }
