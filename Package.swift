@@ -15,8 +15,8 @@ let package = Package(
   ],
   dependencies: [
     .package(
-      url: "https://github.com/vapor/swift-nio-websocket-client.git",
-      .branch("master")
+      url: "https://github.com/omochi/nio-websocket-client.git",
+      .branch("buffer-early-stream")
     ),
     .package(
       url: "https://github.com/swift-server/swift-nio-http-client.git",
