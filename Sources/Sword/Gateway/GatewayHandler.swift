@@ -42,6 +42,8 @@ protocol GatewayHandler : AnyObject {
   
   /// Reconnects the handler to the gateway
   func reconnect()
+  
+  func didConnect()
 }
 
 extension GatewayHandler {
@@ -102,6 +104,8 @@ extension GatewayHandler {
       ws.onText { _, text in
         self.handleText(text)
       }
+      
+      self.didConnect()
     }
     
     // Makes sure we aren't in an event loop when we try to reconnect in the future

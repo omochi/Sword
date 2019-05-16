@@ -61,6 +61,7 @@ class Shard: GatewayHandler {
   
   /// Zlib stream
   var stream = z_stream()
+  var isStreamInited = false
   
   /// Instantiates a Shard
   ///
@@ -70,25 +71,29 @@ class Shard: GatewayHandler {
     self.id = id
     self.sword = sword
     self.heartbeatQueue = DispatchQueue(label: "sword.shard.\(id).heartbeat")
-    
-    // Setup inflater
-    stream.avail_in = 0
-    stream.next_in = nil
-    stream.total_out = 0
-    stream.zalloc = nil
-    stream.zfree = nil
-    
+  }
+  
+  /// Handles deinitialization of a shard
+  deinit {
+    releaseZLibStream()
+  }
+  
+  private func initZLibStream() {
+    stream = z_stream()
     inflateInit2_(
       &stream,
       MAX_WBITS,
       ZLIB_VERSION,
       Int32(MemoryLayout<z_stream>.size)
     )
+    isStreamInited = true
   }
   
-  /// Handles deinitialization of a shard
-  deinit {
-    inflateEnd(&stream)
+  private func releaseZLibStream() {
+    if isStreamInited {
+      inflateEnd(&stream)
+    }
+    isStreamInited = false
   }
   
   /// Adds _trace to current list of _trace
@@ -96,6 +101,11 @@ class Shard: GatewayHandler {
     for trace in th.trace {
       self.trace.append(trace)
     }
+  }
+  
+  func didConnect() {
+    releaseZLibStream()
+    initZLibStream()
   }
   
   /// Handles binary being sent through the gateway
