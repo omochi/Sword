@@ -86,7 +86,8 @@ extension GatewayHandler {
     
     let ws = client.connect(
       host: host,
-      port: port
+      port: port,
+      uri: url.absoluteString
     ) { [unowned self] ws in
       self.session = ws
       
