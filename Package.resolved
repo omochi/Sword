@@ -2,12 +2,21 @@
   "object": {
     "pins": [
       {
+        "package": "nio-websocket-client",
+        "repositoryURL": "https://github.com/omochi/nio-websocket-client.git",
+        "state": {
+          "branch": "buffer-early-stream",
+          "revision": "841f35463bc2cea5c8bffa92870a52a9ef3b6236",
+          "version": null
+        }
+      },
+      {
         "package": "swift-nio",
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "c07fea1aa5fa8147a4f43929fff6d71ec17f01fb",
-          "version": "2.0.1"
+          "revision": "0e37ada7cc6b68452716d706849b6868a2a77429",
+          "version": "2.1.0"
         }
       },
       {
@@ -15,7 +24,7 @@
         "repositoryURL": "https://github.com/swift-server/swift-nio-http-client.git",
         "state": {
           "branch": "master",
-          "revision": "23dd98416b4be724894294e89cd8e6a7a462cff7",
+          "revision": "317f4fa6654aa19112583d40f8bb8295c3f0eeec",
           "version": null
         }
       },
@@ -26,15 +35,6 @@
           "branch": null,
           "revision": "f9ac0c3486f8e9333e791caf135e3fe067e0e66c",
           "version": "2.0.2"
-        }
-      },
-      {
-        "package": "nio-websocket-client",
-        "repositoryURL": "https://github.com/vapor/swift-nio-websocket-client.git",
-        "state": {
-          "branch": "master",
-          "revision": "5bbe62bc77bfdebab3a5819deeafd3fe607b3b1d",
-          "version": null
         }
       }
     ]
